@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "images_handler.h"
-#include "debug.h"
 #include "neural_network_handler.h"
 
 
