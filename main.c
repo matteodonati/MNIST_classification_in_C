@@ -7,6 +7,7 @@
 #include <string.h>
 #include "images_handler.h"
 #include "debug.h"
+#include "neural_network_handler.h"
 
 
 /**
@@ -38,12 +39,25 @@ int main(int argc, char* argv[])
 	
 	else
 	{
-		/* Loading images. */
+		/* Number of layers. */
+		int layers_number = atoi(argv[2]);
+
+		/* Array containing the number of neurons in each layer. */
+		int neurons_number[layers_number];
+
+		/* Initialize neurons_number. */
+		for(int i = 0; i < layers_number; i++)
+			neurons_number[i] = atoi(argv[i + 4]);
+
+		/* Initialize neural network. */
+		init_neural_network(layers_number, neurons_number);
+			
+		/* Load images. */
 		read_images();
-		
-		/* Print image. */
-		debug_print_image_info(training_images[0], training_labels[0], width, height);
-		
+	
+		/* Free neural network memory. */
+		free_neural_network_memory();
+
 		/* Free all allocated memory. */
 		free_images_memory();
 	}
