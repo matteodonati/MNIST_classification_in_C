@@ -1,4 +1,12 @@
 /**
+ *	Macros definition.
+ */
+
+/* max macro. */
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+
+
+/**
  *	Types definition.
  */
 
@@ -72,6 +80,18 @@ extern int l_size;
 
 /* Initializes layers, neurons, weights and biases. */
 extern void init_neural_network(int, int*);
+
+/* ReLU activation function. */
+extern float relu(float);
+
+/* Softmax activation function. */
+extern float* softmax();
+
+/* Cross entropy loss function.  */
+extern float cross_entropy(float);
+
+/* Computes forward pass. */
+extern void compute_output(float*);
 
 /* Frees memory. */
 extern void free_neural_network_memory();
