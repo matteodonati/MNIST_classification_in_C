@@ -17,7 +17,7 @@
 int main(int argc, char* argv[])
 {
 	/* Check if argc is less than eleven (minimum number of arguments required). */
-	if(argc < 11)
+	if(argc < 7)
 		printf("Too few arguments.\n");
 	
 	/* Check if -l argument is correct. */
@@ -28,12 +28,8 @@ int main(int argc, char* argv[])
 	else if(strcmp(argv[3], "-n"))
 		printf("-n argument not correct.\n");
 	
-	/* Check if -a argument is correct. */
-	else if(strcmp(argv[3 + atoi(argv[2]) + 1], "-a"))
-		printf("-a argument not correct.\n");
-	
 	/* Check if the number of arguments is correct. */
-	else if(atoi(argv[2]) != argc - 8)
+	else if(atoi(argv[2]) != argc - 4)
 		printf("Number of argument not correct.\n");		
 	
 	else
@@ -53,11 +49,21 @@ int main(int argc, char* argv[])
 			
 		/* Load images. */
 		read_images();
+
+		/* Example: load training_images[0]. */
+		compute_output(training_images[0]);
+
+		/* Print output distribution. */
+		for(int i = 0; i < l[l_size - 1].n_size; i++)
+			printf("y[%d]: %f.\n", i, l[l_size - 1].n[i].a);
+
+		/* Print error. */
+		printf("Error: %f.\n", cross_entropy(training_labels[0]));
 	
 		/* Free neural network memory. */
 		free_neural_network_memory();
 
-		/* Free all allocated memory. */
+		/* Free images memory. */
 		free_images_memory();
 	}
 	

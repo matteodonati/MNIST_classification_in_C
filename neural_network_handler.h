@@ -85,13 +85,16 @@ extern void init_neural_network(int, int*);
 extern float relu(float);
 
 /* Softmax activation function. */
-extern float* softmax();
+extern void  softmax();
 
 /* Cross entropy loss function.  */
 extern float cross_entropy(float);
 
 /* Computes forward pass. */
 extern void compute_output(float*);
+
+/* Reset function. */
+extern void reset_neural_network();
 
 /* Frees memory. */
 extern void free_neural_network_memory();

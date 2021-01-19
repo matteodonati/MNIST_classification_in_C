@@ -45,21 +45,17 @@ void init_neural_network(int layers_number, int* neurons_number)
 		l[i].n = (neuron_t*)malloc(l[i].n_size * sizeof(neuron_t));
 
 		/* Allocate memory for each neuron in the ith layer. */
-		for(int j = 0; j < l[i].n_size; j++)
+		for(int j = 0; i > 0 && j < l[i].n_size; j++)
 		{
-			/* Check if there exist an i - 1 layer. */
-			if(i > 0)
-			{
-				/* Set the specific w_size. */
-				l[i].n[j].w_size = neurons_number[i - 1];
+			/* Set the specific w_size. */
+			l[i].n[j].w_size = neurons_number[i - 1];
 	
-				/* Weights.  */
-				l[i].n[j].w = (weight_t*)malloc(l[i].n[j].w_size * sizeof(weight_t));
+			/* Weights.  */
+			l[i].n[j].w = (weight_t*)malloc(l[i].n[j].w_size * sizeof(weight_t));
 
-				/* Initializing weights. */
-				for(int k = 0; k < l[i].n[j].w_size; k++)
-					l[i].n[j].w[k].value = ((float)rand() / (float)((unsigned)RAND_MAX + 1) * 2) - 1;
-			}
+			/* Initializing weights. */
+			for(int k = 0; k < l[i].n[j].w_size; k++)
+				l[i].n[j].w[k].value = ((float)rand() / (float)((unsigned)RAND_MAX + 1) * 2) - 1;
 
 			/* Initializing biases. */
 			l[i].n[j].b.value = ((float)rand() / (float)((unsigned)RAND_MAX + 1) * 2) - 1;
@@ -70,53 +66,42 @@ void init_neural_network(int layers_number, int* neurons_number)
 /* Computes forward pass. */
 void compute_output(float* image)
 {
-	/* Output distribution. */
-	float* output;
+	/* Copy image to input layer. */
+	for(int i = 0; i < l[0].n_size; i++)
+		l[0].n[i].a = image[i];
 
-	/* Iterate through layers. */
-	for(int i = 0; i < l_size; i++)
+	/* Iterate through the remaining layers. */
+	for(int i = 1; i < l_size; i++)
 	{
-		/* Input layer.  */
-		if(i == 0)
-		{
-			/* Compute z values and a values.  */
-			for(int j = 0; j < l[i].n_size; j++)
-			{
-				/* Compute z for each neuron. */
-				l[i].n[j].z = image[j] + l[i].n[j].b.value;
-
-				/* Compute a for each neuron. */
-				l[i].n[j].a = relu(l[i].n[j].z);
-			}
-		}
-		else if(i == l_size - 1)
+		/* Output layer. */
+		if(i == l_size - 1)
 		{
 			/* Compute z values and a values. */
 			for(int j = 0; j < l[i].n_size; j++)
 			{
 				/* Compute z for each neuron. */
-				for(int k = 0; k < l[i - 1].n_size; k++)
+				for(int k = 0; k < l[i].n[j].w_size; k++)
 					l[i].n[j].z += l[i].n[j].w[k].value * l[i - 1].n[k].a;
-
+				
+				/* Add the bias to z. */
 				l[i].n[j].z += l[i].n[j].b.value;					
 			}
 
 			/* Compute a for the entire output layer. */
-			output = softmax();
-
-			/* Set the a value for each output neuron. */
-			for(int j = 0; j < l[i].n_size; j++)
-				l[i].n[j].a = output[j];
+			softmax();
 		}
+
+		/* Hidden layers. */
 		else
 		{
 			/* Compute z values and a values. */
 			for(int j = 0; j < l[i].n_size; j++)
 			{
 				/* Compute z for each neuron. */
-				for(int k = 0; k < l[i - 1].n_size; k++)
+				for(int k = 0; k < l[i].n[j].w_size; k++)
 					l[i].n[j].z += l[i].n[j].w[k].value * l[i - 1].n[k].a;
 
+				/* Add the bias to z. */
 				l[i].n[j].z += l[i].n[j].b.value;
 
 				/* Compute a for each neuron. */
@@ -124,37 +109,28 @@ void compute_output(float* image)
 			}
 		}
 	}
-
-	/* Free output. */
-	free(output);
 }
 
 /* ReLU activation function.  */
 float relu(float input)
 {
 	/* Returns ReLU's output. */
-	return max(0, input);
+	return (input > 0 ? input : 0);
 }
 
 /* Softmax activation function. */
-float* softmax()
+void softmax()
 {
-	/* Allocate memory. */
-	float* output = (float*)malloc(l[l_size - 1].n_size * sizeof(float));
-
 	/* Sum of logits. */
 	float logits_sum = 0;
 
 	/* Compute sum of logits. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
-		logits_sum += exp(l[l_size].n[i].z);
+		logits_sum += exp(l[l_size - 1].n[i].z);
 
 	/* Compute each element of the distribution. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
-		output[i] = exp(l[l_size - 1].n[i].z) / logits_sum;
-
-	/* Return output. */
-	return output;
+		l[l_size - 1].n[i].a = exp(l[l_size - 1].n[i].z) / logits_sum;
 }
 
 /* Cross entropy loss function.  */
@@ -176,6 +152,30 @@ float cross_entropy(float label)
 	return (loss * (-1));
 }
 
+/* Reset function.  */
+void reset_neural_network()
+{
+	/* Iterate through layers. */
+	for(int i = 0; i < l_size; i++)
+
+		/* Iterate through neurons. */
+		for(int j = 0; j < l[i].n_size; j++)
+		{
+			/* Reset z, a. */
+			l[i].n[j].z = 0;
+			l[i].n[j].a = 0;
+
+			/* Reset dC_db. */
+			l[i].n[j].b.dC_db = 0;
+
+			/* Iterate through weights. */
+			for(int k = 0; k < l[i].n[j].w_size; k++)
+
+				/* Reset dC_dw. */
+				l[i].n[j].w[k].dC_dw = 0;
+		}
+}
+
 /* Frees memory. */
 void free_neural_network_memory()
 {
@@ -184,14 +184,12 @@ void free_neural_network_memory()
 	{
 		/* Free w. */
 		for(int j = 0; j < l[i].n_size; j++)
-		{
+
 			/* Check if there exist an i + 1 layer. */
 			if(i < l_size - 1)
-			{
+
 				/* Free w. */
 				free(l[i].n[j].w);
-			}
-		}
 
 		/* Free n. */
 		free(l[i].n);
