@@ -50,15 +50,28 @@ int main(int argc, char* argv[])
 		/* Load images. */
 		read_images();
 
-		/* Example: load training_images[0]. */
-		compute_output(training_images[0]);
+		/* Example: load training_images[0] and train for five epochs. */
+		for(int i = 0; i < 50; i++)
+		{
+			/* Forward pass. */
+			compute_forward(training_images[0]);
 
-		/* Print output distribution. */
-		for(int i = 0; i < l[l_size - 1].n_size; i++)
-			printf("y[%d]: %f.\n", i, l[l_size - 1].n[i].a);
+			/* Print epoch number. */
+			printf("Epoch: %d\n", i);
 
-		/* Print error. */
-		printf("Error: %f.\n", cross_entropy(training_labels[0]));
+			/* Print output distribution. */
+			for(int i = 0; i < l[l_size - 1].n_size; i++)
+				printf("y[%d]: %f.\n", i, l[l_size - 1].n[i].a);
+
+			/* Print error. */
+			printf("Error: %f.\n\n", cross_entropy(training_labels[0]));
+
+			/* Backward pass. */
+			compute_backward(training_labels[0]);
+
+			/* Reset neural network. */
+			reset_neural_network();
+		}
 	
 		/* Free neural network memory. */
 		free_neural_network_memory();

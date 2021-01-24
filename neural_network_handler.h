@@ -1,9 +1,9 @@
 /**
- *	Macros definition.
+ *	Symbolic constants.
  */
 
-/* max macro. */
-#define max(a, b) (((a) > (b)) ? (a) : (b))
+/* Learning rate. */
+#define ETA 0.05f
 
 
 /**
@@ -91,7 +91,10 @@ extern void  softmax();
 extern float cross_entropy(float);
 
 /* Computes forward pass. */
-extern void compute_output(float*);
+extern void compute_forward(float*);
+
+/* Computes backward pass. */
+extern void compute_backward(float);
 
 /* Reset function. */
 extern void reset_neural_network();

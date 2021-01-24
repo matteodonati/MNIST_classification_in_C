@@ -63,54 +63,6 @@ void init_neural_network(int layers_number, int* neurons_number)
 	}
 }
 
-/* Computes forward pass. */
-void compute_output(float* image)
-{
-	/* Copy image to input layer. */
-	for(int i = 0; i < l[0].n_size; i++)
-		l[0].n[i].a = image[i];
-
-	/* Iterate through the remaining layers. */
-	for(int i = 1; i < l_size; i++)
-	{
-		/* Output layer. */
-		if(i == l_size - 1)
-		{
-			/* Compute z values and a values. */
-			for(int j = 0; j < l[i].n_size; j++)
-			{
-				/* Compute z for each neuron. */
-				for(int k = 0; k < l[i].n[j].w_size; k++)
-					l[i].n[j].z += l[i].n[j].w[k].value * l[i - 1].n[k].a;
-				
-				/* Add the bias to z. */
-				l[i].n[j].z += l[i].n[j].b.value;					
-			}
-
-			/* Compute a for the entire output layer. */
-			softmax();
-		}
-
-		/* Hidden layers. */
-		else
-		{
-			/* Compute z values and a values. */
-			for(int j = 0; j < l[i].n_size; j++)
-			{
-				/* Compute z for each neuron. */
-				for(int k = 0; k < l[i].n[j].w_size; k++)
-					l[i].n[j].z += l[i].n[j].w[k].value * l[i - 1].n[k].a;
-
-				/* Add the bias to z. */
-				l[i].n[j].z += l[i].n[j].b.value;
-
-				/* Compute a for each neuron. */
-				l[i].n[j].a = relu(l[i].n[j].z);
-			}
-		}
-	}
-}
-
 /* ReLU activation function.  */
 float relu(float input)
 {
@@ -150,6 +102,90 @@ float cross_entropy(float label)
 
 	/* Return loss value. */
 	return (loss * (-1));
+}
+
+/* Computes forward pass. */
+void compute_forward(float* image)
+{
+	/* Copy image to input layer. */
+	for(int i = 0; i < l[0].n_size; i++)
+		l[0].n[i].a = image[i];
+
+	/* Iterate through the remaining layers. */
+	for(int i = 1; i < l_size; i++)
+	{
+		/* Compute z values and a values. */
+		for(int j = 0; j < l[i].n_size; j++)
+		{
+			/* Compute z for each neuron. */
+			for(int k = 0; k < l[i].n[j].w_size; k++)
+				l[i].n[j].z += l[i].n[j].w[k].value * l[i - 1].n[k].a;
+				
+			/* Add the bias to z. */
+			l[i].n[j].z += l[i].n[j].b.value;
+
+			/* Check if current layer is not output layer. */
+			if(i != l_size - 1)
+
+				/* Compute a for each neuron. */
+				l[i].n[j].a = relu(l[i].n[j].z);
+		}
+	}
+
+	/* Compute a for the output layer. */
+	softmax();
+}
+
+/* Computes backward pass. */
+void compute_backward(float label)
+{
+	/* Compute output layer's error. */
+	for(int i = 0; i < l[l_size - 1].n_size; i++)
+
+		/* delta^L = a^L - y. */
+		l[l_size - 1].n[i].err = l[l_size - 1].n[i].a - (i == (int)label ? 1 : 0);
+
+	/* Compute hidden layers' error. */
+	for(int i = l_size - 2; i > 0; i--)
+	{
+		/* Iterate through neurons of the (i + 1)th layer. */
+		for(int j = 0; j < l[i + 1].n_size; j++)
+
+			/* Iterate through weights of the (i + 1)th layer. */
+			for(int k = 0; k < l[i + 1].n[j].w_size; k++)
+
+				/* Compute partial error. */
+				l[i].n[k].err += l[i + 1].n[j].w[k].value * l[i + 1].n[j].err;
+
+		/* Iterate through neurons of the ith layer. */
+		for(int j = 0; j < l[i].n_size; j++)
+
+			/* delta^l = (delta^(i + 1) * (w^(i + 1)^T) Hadamard ReLU'(z^l)) */
+			l[i].n[j].err *= (l[i].n[j].z < 0 ? 0 : 1);
+	}
+
+	/* Compute dC_db and update bias, compute dC_dw and update weights. Iterate through layers. */
+	for(int i = 1; i < l_size; i++)
+
+		/* Iterate through neurons. */
+		for(int j = 0; j < l[i].n_size; j++)
+		{
+			/* dC_db^l_j = delta^l_j. */
+			l[i].n[j].b.dC_db = l[i].n[j].err;
+
+			/* Update bias. */
+			l[i].n[j].b.value -= ETA * l[i].n[j].b.dC_db;
+
+			/* Iterate through weights. */
+			for(int k = 0; k < l[i].n[j].w_size; k++)
+			{
+				/* dC_dw^l_jk = a^(l - 1)_k * err^l_j. */
+				l[i].n[j].w[k].dC_dw = l[i - 1].n[k].a * l[i].n[j].err;
+
+				/* Update weight. */
+				l[i].n[j].w[k].value -= ETA * l[i].n[j].w[k].dC_dw; 
+			}
+		}
 }
 
 /* Reset function.  */
