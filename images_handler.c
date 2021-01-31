@@ -4,6 +4,9 @@
 
 #include <dirent.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "images_handler.h"
@@ -16,17 +19,11 @@
 /* Width, height and number of channels of a single image. */
 int width, height, channels;
 
-/* Training images. */
-float* training_images[TRAINING_SAMPLES];
+/* Training samples. */
+double* training_samples[N_TRAINING_SAMPLES];
 
-/* Training labels. */
-float training_labels[TRAINING_SAMPLES];
-
-/* Testing images. */
-float* testing_images[TESTING_SAMPLES];
-
-/* Testing labels. */
-float testing_labels[TESTING_SAMPLES];
+/* Testing samples. */
+double* testing_samples[N_TESTING_SAMPLES];
 
 
 /**
@@ -56,6 +53,9 @@ void read_images()
 		{
 			/* Reset of the location string. */
 			reset_location(location, label, cmd);
+
+			/* Print the name of the current direcotyr. */
+			printf("Reading %s files.\n", location);
 			
 			/* Opening the directory. */
 			d = opendir(location);
@@ -74,20 +74,15 @@ void read_images()
 					{
 						case TRAINING_CMD:
 							
-							/* Storing image. */
-							training_images[i] = read_image_from_location(location);
-							
-							/* Storing label. */
-							training_labels[i] = (float)(label - '0');
+							/* Store image and label. */
+							training_samples[i] = read_image_from_location(location, label); 
 							
 							break;
+
 						case TESTING_CMD:
 						
-							/* Storing image. */
-							testing_images[i] = read_image_from_location(location);
-							
-							/* Storing label. */
-							testing_labels[i] = (float)(label - '0');
+							/* Store image and label. */
+							testing_samples[i] = read_image_from_location(location, label);
 						
 							break;
 					}
@@ -108,18 +103,21 @@ void read_images()
 }
 
 /* Load a single image from a specific location. */
-float* read_image_from_location(char* location)
+double* read_image_from_location(char* location, char label)
 {
 	/* Image reading. The dataset contains RGB images. These need to be copied to a single-channel buffer. */
 	uint8_t* tmp_rgb_image = stbi_load(location, &width, &height, &channels, 0);
 	
 	/* Allocation of image. */
-	float* image = (float*)malloc(width * height * sizeof(float));
+	double* image = (double*)malloc((width * height + 1) * sizeof(double));
 	
 	/* Parsing of the three-channels image. */
 	for(int i = 0; i < width * height * channels; i++)
 		if(i % 3 == 0)
-			image[i / 3] = (float)tmp_rgb_image[i] / 255;
+			image[i / 3] = (double)tmp_rgb_image[i] / 255;
+
+	/* Add label as last element of image. */
+	image[width * height] = (double)(label - '0');
 	
 	/* Deallocation of tmp_rgb_image. */
 	stbi_image_free(tmp_rgb_image);
@@ -146,6 +144,7 @@ void reset_location(char* location, char label, int cmd)
 			len = strlen(TRAINING_DIR);
 			
 			break;
+
 		case TESTING_CMD:
 		
 			/* Copy of TESTING_DIR into location. */
@@ -167,14 +166,49 @@ void reset_location(char* location, char label, int cmd)
 	location[len + 2] = '\0';
 }
 
+/* Shuffles images. */
+void shuffle_images()
+{
+	/* Print information message. */
+	printf("Shuffling samples.\n");
+
+	/* Temporary index. */
+	int tmp_index;
+
+	/* Temporary image. */
+	double tmp_image[width * height + 1];
+
+	/* Initialize seed. */
+	srand(time(NULL));
+
+	/* Shuffle images. */
+	for(int i = 0; i < N_TRAINING_SAMPLES - 1; i++)
+	{
+		/* Generate tmp_index. */
+		tmp_index = i + rand() / (RAND_MAX / (N_TRAINING_SAMPLES - i) + 1);
+
+		/* Copy training_samples[tmp_index] into tmp_image. */
+		for(int j = 0; j < width * height + 1; j++)
+			tmp_image[j] = training_samples[tmp_index][j];
+
+		/* Copy training_samples[i] into training_samples[tmp_index]. */
+		for(int j = 0; j < width * height + 1; j++)
+			training_samples[tmp_index][j] = training_samples[i][j];
+
+		/* Copy tmp_image into training_samples[i]. */
+		for(int j = 0; j < width * height + 1; j++)
+			training_samples[i][j] = tmp_image[j];
+	}
+}
+
 /* Deallocates memory. */
 void free_images_memory()
 {	
-	/* Freeing each element of training_images. */
-	for(int i = 0; i < TRAINING_SAMPLES; i++)
-		free(training_images[i]);
+	/* Freeing each element of training_samples. */
+	for(int i = 0; i < N_TRAINING_SAMPLES; i++)
+		free(training_samples[i]);
 	
-	/* Freeing each element of testing_images. */
-	for(int i = 0; i < TESTING_SAMPLES; i++)
-		free(testing_images[i]);
+	/* Freeing each element of testing_samples. */
+	for(int i = 0; i < N_TESTING_SAMPLES; i++)
+		free(testing_samples[i]);
 }

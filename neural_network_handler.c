@@ -3,6 +3,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #include <math.h>
 #include "neural_network_handler.h"
@@ -55,16 +56,15 @@ void init_neural_network(int layers_number, int* neurons_number)
 
 			/* Initializing weights. */
 			for(int k = 0; k < l[i].n[j].w_size; k++)
-				l[i].n[j].w[k].value = ((float)rand() / (float)((unsigned)RAND_MAX + 1) * 2) - 1;
 
-			/* Initializing biases. */
-			l[i].n[j].b.value = ((float)rand() / (float)((unsigned)RAND_MAX + 1) * 2) - 1;
+				/* Initializing weight value. */
+				l[i].n[j].w[k].value = ((double)rand() / (double)((unsigned)RAND_MAX + 1) * 2) - 1;
 		}
 	}
 }
 
 /* ReLU activation function.  */
-float relu(float input)
+double relu(double input)
 {
 	/* Returns ReLU's output. */
 	return (input > 0 ? input : 0);
@@ -73,39 +73,51 @@ float relu(float input)
 /* Softmax activation function. */
 void softmax()
 {
+	/* Maximum value in output's z array. */
+	double max = -9999;
+
+	/* Index of maximum value in output's z array. */
+	int max_index = -1;
+
+	/* Temporary array. */
+	double tmp_z[l[l_size - 1].n_size];
+
 	/* Sum of logits. */
-	float logits_sum = 0;
+	double logits_sum = 0;
+
+	/* Find max in output's z array. */
+	for(int i = 0; i < l[l_size - 1].n_size; i++)
+		if(max < l[l_size - 1].n[i].z)
+		{
+			max = l[l_size - 1].n[i].z;
+			max_index = i;
+		}
+
+	/* Max-normalize output's z array into tmp_a to prevent instability. */
+	for(int i = 0; i < l[l_size - 1].n_size; i++)
+		tmp_z[i] = l[l_size - 1].n[i].z - max;
 
 	/* Compute sum of logits. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
-		logits_sum += exp(l[l_size - 1].n[i].z);
+		logits_sum += exp(tmp_z[i]);
 
 	/* Compute each element of the distribution. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
-		l[l_size - 1].n[i].a = exp(l[l_size - 1].n[i].z) / logits_sum;
+		l[l_size - 1].n[i].a = exp(tmp_z[i]) / logits_sum;
 }
 
 /* Cross entropy loss function.  */
-float cross_entropy(float label)
+double cross_entropy(double label)
 {
-	/* Loss value. */
-	float loss = 0;
+	/* Store l[l_size - 1].n[(int)label].a value. */
+	double tmp = l[l_size - 1].n[(int)label].a;
 
-	/* Compute loss. */
-	for(int i = 0; i < l[l_size - 1].n_size; i++)
-		
-		/* Check if i is equal to label. */
-		if(i == (int)label)
-
-			/* Update loss. */
-			loss += log(l[l_size - 1].n[i].a) / log(2);
-
-	/* Return loss value. */
-	return (loss * (-1));
+	/* Return loss value and prevent instability. */
+	return (tmp == 0 ? (-1) * (log(0.000001) / log(2)) : (-1) * (log(tmp) / log(2)));
 }
 
 /* Computes forward pass. */
-void compute_forward(float* image)
+void compute_forward(double* image)
 {
 	/* Copy image to input layer. */
 	for(int i = 0; i < l[0].n_size; i++)
@@ -117,12 +129,12 @@ void compute_forward(float* image)
 		/* Compute z values and a values. */
 		for(int j = 0; j < l[i].n_size; j++)
 		{
+			/* Add the bias to z. */
+			l[i].n[j].z = l[i].n[j].b.value;
+
 			/* Compute z for each neuron. */
 			for(int k = 0; k < l[i].n[j].w_size; k++)
 				l[i].n[j].z += l[i].n[j].w[k].value * l[i - 1].n[k].a;
-				
-			/* Add the bias to z. */
-			l[i].n[j].z += l[i].n[j].b.value;
 
 			/* Check if current layer is not output layer. */
 			if(i != l_size - 1)
@@ -137,7 +149,7 @@ void compute_forward(float* image)
 }
 
 /* Computes backward pass. */
-void compute_backward(float label)
+void compute_backward(double label)
 {
 	/* Compute output layer's error. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
@@ -197,10 +209,6 @@ void reset_neural_network()
 		/* Iterate through neurons. */
 		for(int j = 0; j < l[i].n_size; j++)
 		{
-			/* Reset z, a. */
-			l[i].n[j].z = 0;
-			l[i].n[j].a = 0;
-
 			/* Reset dC_db. */
 			l[i].n[j].b.dC_db = 0;
 
@@ -209,6 +217,9 @@ void reset_neural_network()
 
 				/* Reset dC_dw. */
 				l[i].n[j].w[k].dC_dw = 0;
+
+			/* Reset err. */
+			l[i].n[j].err = 0;
 		}
 }
 

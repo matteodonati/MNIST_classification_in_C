@@ -15,10 +15,10 @@
 #define TESTING_CMD 1
 
 /* Number of training samples. */
-#define TRAINING_SAMPLES 50
+#define N_TRAINING_SAMPLES 60000
 
 /* Number of testing samples. */
-#define TESTING_SAMPLES 10
+#define N_TESTING_SAMPLES 10000
 
 
 /**
@@ -28,17 +28,11 @@
 /* Width, height and number of channels of a single image. */
 extern int width, height, channels;
 
-/* Training images. */
-extern float* training_images[];
+/* Training samples. */
+extern double* training_samples[];
 
-/* Training labels. */
-extern float training_labels[];
-
-/* Testing images. */
-extern float* testing_images[];
-
-/* Testing labels. */
-extern float testing_labels[];
+/* Testing samples. */
+extern double* testing_samples[];
 
 
 /**
@@ -49,10 +43,13 @@ extern float testing_labels[];
 extern void read_images();
 
 /* Load a single image from a specific location. */
-extern float* read_image_from_location(char*);
+extern double* read_image_from_location(char*, char);
 
 /* Resets the location string. */
 extern void reset_location(char*, char, int);
+
+/* Shuffles images. */
+extern void shuffle_images();
 
 /* Deallocates memory. */
 extern void free_images_memory();

@@ -3,7 +3,7 @@
  */
 
 /* Learning rate. */
-#define ETA 0.05f
+#define ETA 0.01f
 
 
 /**
@@ -14,20 +14,20 @@
 typedef struct bias
 {
 	/* Bias value. */
-	float value;
+	double value;
 
 	/* Derivative of the loss function with respect to the bias. */
-	float dC_db;
+	double dC_db;
 } bias_t;
 
 /* weight_t type. */
 typedef struct weight
 {
 	/* Weight value. */
-	float value;
+	double value;
 
 	/* Derivative of the loss function with respect to the weight. */
-	float dC_dw;
+	double dC_dw;
 } weight_t;
 
 /* neuron_t type. */
@@ -43,13 +43,13 @@ typedef struct neuron
 	bias_t b;
 
 	/* z value. */
-	float z;
+	double z;
 
 	/* Activation value. */
-	float a;
+	double a;
 
 	/* Derivative of the loss function with respect to the z value. */
-	float err;
+	double err;
 } neuron_t;
 
 /* layer_t type. */
@@ -82,19 +82,19 @@ extern int l_size;
 extern void init_neural_network(int, int*);
 
 /* ReLU activation function. */
-extern float relu(float);
+extern double relu(double);
 
 /* Softmax activation function. */
-extern void  softmax();
+extern void softmax();
 
 /* Cross entropy loss function.  */
-extern float cross_entropy(float);
+extern double cross_entropy(double);
 
 /* Computes forward pass. */
-extern void compute_forward(float*);
+extern void compute_forward(double*);
 
 /* Computes backward pass. */
-extern void compute_backward(float);
+extern void compute_backward(double);
 
 /* Reset function. */
 extern void reset_neural_network();

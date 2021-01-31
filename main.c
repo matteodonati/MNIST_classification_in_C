@@ -10,6 +10,17 @@
 
 
 /**
+ *	Functions' declaration.
+ */
+
+/* Starts training.  */
+void train();
+
+/* Starts testing. */
+void test();
+
+
+/**
  *	Functions' definitions.
  */
 
@@ -50,28 +61,14 @@ int main(int argc, char* argv[])
 		/* Load images. */
 		read_images();
 
-		/* Example: load training_images[0] and train for five epochs. */
-		for(int i = 0; i < 50; i++)
-		{
-			/* Forward pass. */
-			compute_forward(training_images[0]);
+		/* Shuffle images. */
+		shuffle_images();
 
-			/* Print epoch number. */
-			printf("Epoch: %d\n", i);
+		/* Training. */
+		train();
 
-			/* Print output distribution. */
-			for(int i = 0; i < l[l_size - 1].n_size; i++)
-				printf("y[%d]: %f.\n", i, l[l_size - 1].n[i].a);
-
-			/* Print error. */
-			printf("Error: %f.\n\n", cross_entropy(training_labels[0]));
-
-			/* Backward pass. */
-			compute_backward(training_labels[0]);
-
-			/* Reset neural network. */
-			reset_neural_network();
-		}
+		/* Testing. */
+		test();
 	
 		/* Free neural network memory. */
 		free_neural_network_memory();
@@ -82,4 +79,120 @@ int main(int argc, char* argv[])
 	
 	/* Returning zero. */
 	return 0;
+}
+
+
+/* Starts training. */
+void train()
+{
+	/* Print information text. */
+	printf("Training.\n");
+
+	/* Run training for ten epochs. */
+	for(int i = 0; i < 10; i++)
+	{
+		/* Temporary sum used to compute accuracy. */
+		int correct_classifications = 0;
+
+		/* Temporary sum used to compute error. */
+		double error = 0;
+		
+		/* Iterate through training samples. */
+		for(int j = 0; j < N_TRAINING_SAMPLES; j++)
+		{
+			/* Maximum value in logits array. */
+			double max = 0;
+
+			/* Index of maximum value in logits array. */
+			int index_max = -1;
+			
+			/* Forward pass. */
+			compute_forward(training_samples[j]);
+	
+			/* Compute error. */
+			error += cross_entropy(training_samples[j][l[0].n_size]);
+
+			/* Check if the model's prediction is correct. */
+			for(int k = 0; k < l[l_size - 1].n_size; k++)
+			{
+				/* Compare max with l[l_size - 1].n[k].a. */
+				if(max < l[l_size - 1].n[k].a)
+				{
+					/* Update max. */
+					max = l[l_size - 1].n[k].a;
+
+					/* Update index_max. */
+					index_max = k;
+				}
+			}
+
+			/* Compare index_max with label. */
+			if(index_max == (int)training_samples[j][l[0].n_size])
+			
+				/* Update correct_classifications. */
+				correct_classifications += 1;
+
+			/* Backward pass. */
+			compute_backward(training_samples[j][l[0].n_size]);
+
+			/* Reset neural network. */
+			reset_neural_network();
+		}
+
+		/* Print epoch number, accuracy and error. */
+		printf("Epoch: %d, correct classifications: %d/%d, accuracy: %f, error: %f\n", i, correct_classifications, N_TRAINING_SAMPLES, (float)correct_classifications / N_TRAINING_SAMPLES, error / N_TRAINING_SAMPLES);
+	}
+}
+
+
+/* Starts testing. */
+void test()
+{
+	/* Print information text. */
+	printf("Testing.\n");
+
+	/* Temporary sum used to compute accuracy. */
+	int correct_classifications = 0;
+
+	/* Temporary sum used to compute error. */
+	double error = 0;
+		
+	/* Iterate over testing_samples.. */
+	for(int j = 0; j < N_TESTING_SAMPLES; j++)
+	{
+		/* Maximum value in logits array. */
+		double max = 0;
+
+		/* Index of maximum value in logits array. */
+		int index_max = -1;
+			
+		/* Forward pass. */
+		compute_forward(testing_samples[j]);
+	
+		/* Compute error. */
+		error += cross_entropy(testing_samples[j][l[0].n_size]);
+
+		/* Check if the model's prediction is correct. */
+		for(int k = 0; k < l[l_size - 1].n_size; k++)
+		{
+			/* Compare max with l[l_size - 1].n[k].a. */
+			if(max < l[l_size - 1].n[k].a)
+			{
+				/* Update max. */
+				max = l[l_size - 1].n[k].a;
+
+				/* Update index_max. */
+				index_max = k;
+			}
+		}
+
+		/* Compare index_max with label. */
+		if(index_max == (int)testing_samples[j][l[0].n_size])
+			
+			/* Update correct_classifications. */
+			correct_classifications += 1;
+	}
+
+	/* Print epoch number, accuracy and error. */
+	printf("Correct classifications: %d/%d, accuracy: %f, error: %f\n", correct_classifications, N_TESTING_SAMPLES, (float)correct_classifications / N_TESTING_SAMPLES, error / N_TESTING_SAMPLES);	
 }
