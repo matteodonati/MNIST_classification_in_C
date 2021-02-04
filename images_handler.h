@@ -40,7 +40,7 @@ extern double* testing_samples[];
  */
 
 /* Loads every image in the dataset. */
-extern void read_images();
+extern void read_data();
 
 /* Load a single image from a specific location. */
 extern double* read_image_from_location(char*, char);
@@ -49,7 +49,7 @@ extern double* read_image_from_location(char*, char);
 extern void reset_location(char*, char, int);
 
 /* Shuffles images. */
-extern void shuffle_images();
+extern void shuffle_data();
 
 /* Deallocates memory. */
-extern void free_images_memory();
+extern void free_data_memory();

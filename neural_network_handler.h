@@ -2,9 +2,11 @@
  *	Symbolic constants.
  */
 
-/* Learning rate. */
-#define ETA 0.01f
+/* Number of neurons in the input layer. */
+#define N_INPUT 784
 
+/* Number of neurons in the output layer. */
+#define N_OUTPUT 10
 
 /**
  *	Types definition.
@@ -94,7 +96,7 @@ extern double cross_entropy(double);
 extern void compute_forward(double*);
 
 /* Computes backward pass. */
-extern void compute_backward(double);
+extern void compute_backward(double, float);
 
 /* Reset function. */
 extern void reset_neural_network();

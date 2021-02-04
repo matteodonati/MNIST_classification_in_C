@@ -31,7 +31,7 @@ double* testing_samples[N_TESTING_SAMPLES];
  */
 
 /* Loads every image in the dataset. */
-void read_images()
+void read_data()
 {
 	/* Pointer to directory. */
 	DIR *d;
@@ -42,13 +42,13 @@ void read_images()
 	/* Location of files. */
 	char location[32];
 	
-	/* Iterate through commands. */
+	/* Iterate over commands. */
 	for(int cmd = 0; cmd < TESTING_CMD + 1; cmd++)
 	{
 		/* Index of dataset array. */
 		int i = 0;
 		
-		/* Iterate through labels. */
+		/* Iterate over labels. */
 		for(char label = '0'; label < ':'; label++)
 		{
 			/* Reset of the location string. */
@@ -57,10 +57,10 @@ void read_images()
 			/* Print the name of the current direcotyr. */
 			printf("Reading %s files.\n", location);
 			
-			/* Opening the directory. */
+			/* Open the directory. */
 			d = opendir(location);
 				 
-			 /* Iterate through files. */
+			/* Iterate over files. */
 			while((dir = readdir(d)) != NULL)
 			{
 				/* Check if dir points to a regular file. */
@@ -90,13 +90,13 @@ void read_images()
 					/* Reset of the location string. */
 					reset_location(location, label, cmd);
 					
-					/* Increasing index. */
+					/* Increase index. */
 					i++;
 				}
 					
 			}
 			
-			/* Closing the directory. */
+			/* Close the directory. */
 			closedir(d);
 		}
 	}
@@ -167,7 +167,7 @@ void reset_location(char* location, char label, int cmd)
 }
 
 /* Shuffles images. */
-void shuffle_images()
+void shuffle_data()
 {
 	/* Print information message. */
 	printf("Shuffling samples.\n");
@@ -202,13 +202,13 @@ void shuffle_images()
 }
 
 /* Deallocates memory. */
-void free_images_memory()
+void free_data_memory()
 {	
-	/* Freeing each element of training_samples. */
+	/* Free each element of training_samples. */
 	for(int i = 0; i < N_TRAINING_SAMPLES; i++)
 		free(training_samples[i]);
 	
-	/* Freeing each element of testing_samples. */
+	/* Free each element of testing_samples. */
 	for(int i = 0; i < N_TESTING_SAMPLES; i++)
 		free(testing_samples[i]);
 }
