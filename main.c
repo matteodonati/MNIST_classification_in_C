@@ -122,7 +122,7 @@ int get_predicted_output()
 	
 	/* Iterate over last layers' neurons. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
-
+	{
 		/* Compare max with l[l_size - 1].n[i].a. */
 		if(max < l[l_size - 1].n[i].a)
 		{
@@ -132,7 +132,8 @@ int get_predicted_output()
 			/* Update index. */
 			index = i;
 		}
-
+	}
+	
 	/* Return index. */
 	return index;
 }
@@ -164,9 +165,10 @@ void train(int epochs, float learning_rate)
 
 			/* Compare the predicted output with the specific label. */
 			if(get_predicted_output() == (int)training_samples[j][l[0].n_size])
-			
+			{
 				/* Update correct_classifications. */
 				correct_classifications += 1;
+			}
 
 			/* Backward pass. */
 			compute_backward(training_samples[j][l[0].n_size], learning_rate);
@@ -204,9 +206,10 @@ void test()
 
 		/* Compare the predicted output with the specific label. */
 		if(get_predicted_output() == (int)testing_samples[j][l[0].n_size])
-			
+		{
 			/* Update correct_classifications. */
 			correct_classifications += 1;
+		}
 	}
 
 	/* Print epoch number, accuracy and error. */

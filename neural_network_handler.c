@@ -56,9 +56,10 @@ void init_neural_network(int layers_number, int* neurons_number)
 
 			/* Initialize weights. */
 			for(int k = 0; k < l[i].n[j].w_size; k++)
-
+			{
 				/* Initialize weight value. */
 				l[i].n[j].w[k].value = ((double)rand() / (double)((unsigned)RAND_MAX + 1) * 2) - 1;
+			}
 		}
 	}
 }
@@ -87,23 +88,31 @@ void softmax()
 
 	/* Find max in output's z array. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
+	{
 		if(max < l[l_size - 1].n[i].z)
 		{
 			max = l[l_size - 1].n[i].z;
 			max_index = i;
 		}
+	}
 
 	/* Max-normalize output's z array into tmp_a to prevent instability. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
+	{
 		tmp_z[i] = l[l_size - 1].n[i].z - max;
+	}
 
 	/* Compute sum of logits. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
+	{
 		logits_sum += exp(tmp_z[i]);
+	}
 
 	/* Compute each element of the distribution. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
+	{
 		l[l_size - 1].n[i].a = exp(tmp_z[i]) / logits_sum;
+	}
 }
 
 /* Cross entropy loss function.  */
@@ -121,7 +130,9 @@ void compute_forward(double* image)
 {
 	/* Copy image to input layer. */
 	for(int i = 0; i < l[0].n_size; i++)
+	{
 		l[0].n[i].a = image[i];
+	}
 
 	/* Iterate over the remaining layers. */
 	for(int i = 1; i < l_size; i++)
@@ -134,13 +145,16 @@ void compute_forward(double* image)
 
 			/* Compute z for each neuron. */
 			for(int k = 0; k < l[i].n[j].w_size; k++)
+			{
 				l[i].n[j].z += l[i].n[j].w[k].value * l[i - 1].n[k].a;
+			}
 
 			/* Check if current layer is not output layer. */
 			if(i != l_size - 1)
-
+			{
 				/* Compute a for each neuron. */
 				l[i].n[j].a = relu(l[i].n[j].z);
+			}
 		}
 	}
 
@@ -153,32 +167,36 @@ void compute_backward(double label, float learning_rate)
 {
 	/* Compute output layer's error. */
 	for(int i = 0; i < l[l_size - 1].n_size; i++)
-
+	{
 		/* delta^L = a^L - y. */
 		l[l_size - 1].n[i].err = l[l_size - 1].n[i].a - (i == (int)label ? 1 : 0);
+	}
 
 	/* Compute hidden layers' error. */
 	for(int i = l_size - 2; i > 0; i--)
 	{
 		/* Iterate over neurons of the (i + 1)th layer. */
 		for(int j = 0; j < l[i + 1].n_size; j++)
-
+		{
 			/* Iterate over weights of the (i + 1)th layer. */
 			for(int k = 0; k < l[i + 1].n[j].w_size; k++)
-
+			{
 				/* Compute partial error. */
 				l[i].n[k].err += l[i + 1].n[j].w[k].value * l[i + 1].n[j].err;
+			}
+		}
 
 		/* Iterate over neurons of the ith layer. */
 		for(int j = 0; j < l[i].n_size; j++)
-
+		{
 			/* delta^l = (delta^(i + 1) * (w^(i + 1)^T) Hadamard ReLU'(z^l)) */
 			l[i].n[j].err *= (l[i].n[j].z < 0 ? 0 : 1);
+		}
 	}
 
 	/* Compute dC_db and update bias, compute dC_dw and update weights. Iterate over layers. */
 	for(int i = 1; i < l_size; i++)
-
+	{
 		/* Iterate over neurons. */
 		for(int j = 0; j < l[i].n_size; j++)
 		{
@@ -198,6 +216,7 @@ void compute_backward(double label, float learning_rate)
 				l[i].n[j].w[k].value -= learning_rate * l[i].n[j].w[k].dC_dw; 
 			}
 		}
+	}
 }
 
 /* Reset function.  */
@@ -205,7 +224,7 @@ void reset_neural_network()
 {
 	/* Iterate over layers. */
 	for(int i = 0; i < l_size; i++)
-
+	{		
 		/* Iterate over neurons. */
 		for(int j = 0; j < l[i].n_size; j++)
 		{
@@ -214,13 +233,15 @@ void reset_neural_network()
 
 			/* Iterate over weights. */
 			for(int k = 0; k < l[i].n[j].w_size; k++)
-
+			{
 				/* Reset dC_dw. */
 				l[i].n[j].w[k].dC_dw = 0;
+			}
 
 			/* Reset err. */
 			l[i].n[j].err = 0;
 		}
+	}
 }
 
 /* Frees memory. */
@@ -231,13 +252,15 @@ void free_neural_network_memory()
 	{
 		/* Free w. */
 		for(int j = 0; j < l[i].n_size; j++)
-
+		{
 			/* Check if there exist an i + 1 layer. */
 			if(i < l_size - 1)
-
+			{
 				/* Free w. */
 				free(l[i].n[j].w);
-
+			}
+		}
+		
 		/* Free n. */
 		free(l[i].n);
 	}

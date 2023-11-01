@@ -113,8 +113,12 @@ double* read_image_from_location(char* location, char label)
 	
 	/* Parsing of the three-channels image. */
 	for(int i = 0; i < width * height * channels; i++)
+	{
 		if(i % 3 == 0)
+		{
 			image[i / 3] = (double)tmp_rgb_image[i] / 255;
+		}
+	}
 
 	/* Add label as last element of image. */
 	image[width * height] = (double)(label - '0');
@@ -189,15 +193,21 @@ void shuffle_data()
 
 		/* Copy training_samples[tmp_index] into tmp_image. */
 		for(int j = 0; j < width * height + 1; j++)
+		{
 			tmp_image[j] = training_samples[tmp_index][j];
+		}
 
 		/* Copy training_samples[i] into training_samples[tmp_index]. */
 		for(int j = 0; j < width * height + 1; j++)
+		{
 			training_samples[tmp_index][j] = training_samples[i][j];
+		}
 
 		/* Copy tmp_image into training_samples[i]. */
 		for(int j = 0; j < width * height + 1; j++)
+		{
 			training_samples[i][j] = tmp_image[j];
+		}
 	}
 }
 
@@ -206,9 +216,13 @@ void free_data_memory()
 {	
 	/* Free each element of training_samples. */
 	for(int i = 0; i < N_TRAINING_SAMPLES; i++)
+	{
 		free(training_samples[i]);
+	}
 	
 	/* Free each element of testing_samples. */
 	for(int i = 0; i < N_TESTING_SAMPLES; i++)
+	{
 		free(testing_samples[i]);
+	}
 }
